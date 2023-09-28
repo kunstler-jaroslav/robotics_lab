@@ -28,20 +28,52 @@ class SE3:
 
     def __mul__(self, other: SE3) -> SE3:
         """Compose two transformation, i.e., self * other"""
-        # todo: HW01: implement composition of two transformation.
-        return SE3()
+        # HW01: implement composition of two transformation.
+        se3_matrix = np.eye(4)
+        # Copy the rotation part into the top-left 2x2 submatrix
+        se3_matrix[0:3, 0:3] = self.rotation.rot
+        # Copy the translation part into the top-right 2x1 submatrix
+        se3_matrix[0:3, 3] = self.translation
+
+        mat3 = np.eye(4)
+        mat3[0:3, 0:3] = other.rotation.rot
+        # Copy the translation part into the top-right 2x1 submatrix
+        mat3[0:3, 3] = other.translation
+
+        combined = np.dot(se3_matrix, mat3)
+
+        rot = combined[0:3, 0:3]
+        trans = combined[0:3, 3]
+        composed_transform = SE3(trans, SO3(rot))
+        return composed_transform
 
     def inverse(self) -> SE3:
         """Compute inverse of the transformation"""
-        # todo: HW1 implement inverse
-        return SE3()
+        # HW1 implement inverse
+        # Compute the inverse of the rotation matrix (transpose)
+        inverse_rotation = np.transpose(self.rotation.rot)  # In 2D, the inverse of a rotation matrix is its transpose
+
+        # 2. Compute the inverse translation and reshape it to be a column vector
+        inverse_translation = -np.dot(inverse_rotation, self.translation).reshape((3, 1))
+
+        # 3. Combine the inverted rotation and translation to get the final inverse transformation
+        combined = np.vstack((np.hstack((inverse_rotation, inverse_translation)), [0, 0, 0, 1]))
+        # print("combined")
+        # print(combined)
+        # print("------------")
+        rot = combined[0:3, 0:3]
+        trans = combined[0:3, 3]
+
+        return SE3(trans, SO3(rot))
 
     def act(self, vector: ArrayLike) -> np.ndarray:
         """Rotate given 3D vector by this transformation."""
         v = np.asarray(vector)
         assert v.shape == (3,)
-        # todo: HW1 implement transformation of a given vector
-        return v
+        # HW1 implement transformation of a given vector
+        rotated_vector = np.dot(self.rotation.rot, v)
+        transformed_vector = rotated_vector + self.translation
+        return transformed_vector
 
     def set_from(self, other: SE3):
         """Copy the properties into current instance."""
