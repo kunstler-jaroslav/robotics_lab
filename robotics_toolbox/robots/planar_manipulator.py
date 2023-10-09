@@ -9,7 +9,7 @@ import numpy as np
 from numpy.typing import ArrayLike
 from shapely import MultiPolygon, LineString, MultiLineString
 
-from robotics_toolbox.core import SE2, SE3
+from robotics_toolbox.core import SE2, SE3, SO2
 from robotics_toolbox.robots.robot_base import RobotBase
 
 
@@ -81,16 +81,37 @@ class PlanarManipulator(RobotBase):
         return self.q
 
     def flange_pose(self) -> SE2:
-        """Return the pose of the flange in the reference frame."""
-        # todo HW02: implement fk for the flange
-        return SE2()
+        """Return the pose of the flange(where connected to the link) in the reference frame."""
+        # HW02: implement fk for the flange
+        flange_pose = self.base_pose
+        for i in range(len(self.q)):
+            if self.structure[i] == "R":
+                rotation_matrix = SE2(rotation=SO2(float(self.q[i])))
+                flange_pose = flange_pose * rotation_matrix * SE2(translation=[self.link_lengths[i], 0])
+            elif self.structure[i] == "P":
+                translation_matrix = SE2(rotation=SO2(float(self.link_lengths[i])))
+                flange_pose = flange_pose * translation_matrix * SE2(translation=[self.q[i], 0])
+        return flange_pose
 
     def fk_all_links(self) -> list[SE2]:
         """Compute FK for frames that are attached to the links of the robot.
         The first frame is base_frame, the next frames are described in the constructor.
+        returns list of SE2 transformations
         """
-        # todo HW02: implement fk
-        frames = []
+        # HW02: implement fk
+        current_frame = self.base_pose
+        frames = [current_frame]
+
+        for i in range(len(self.q)):
+            if self.structure[i] == "R":  # Revolute joint
+                rotation_matrix = SE2(rotation=SO2(float(self.q[i])))
+                current_frame = current_frame * rotation_matrix * SE2(translation=[self.link_lengths[i], 0])
+            elif self.structure[i] == "P":  # Prismatic joint
+                translation_matrix = SE2(rotation=SO2(float(self.link_lengths[i])))
+                current_frame = current_frame * translation_matrix * SE2(translation=[self.q[i], 0])
+
+            frames.append(current_frame)
+
         return frames
 
     def _gripper_lines(self, flange: SE2):

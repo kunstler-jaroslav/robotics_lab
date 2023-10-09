@@ -1,0 +1,114 @@
+<?xml version="1.0"?>
+
+<robot name="my_robot">
+
+    <!-- Cuboid Base Link -->
+    <link name="base_link">
+        <internal>
+            <origin xyz="0 0 0.05" rpy="0 0 0"/>
+        </internal>
+        <visual>
+            <origin xyz="0 0 0.05" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.3 1 0.1"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0.05" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.3 1 0.1"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <link name="virtual_link">
+        <internal>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </internal>
+    </link>
+
+    <joint name="prismatic_joint" type="prismatic">
+        <origin xyz="0 0 0.1" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <parent link="base_link"/>
+        <child link="virtual_link"/>
+        <limit effort="0" velocity="0" lower="-0.45" upper="0.45"/>
+    </joint>
+
+    <link name="cylinder_link">
+        <internal>
+            <origin xyz="0 0 0.25" rpy="0 0 0"/>
+        </internal>
+        <visual>
+            <origin xyz="0 0 0.25" rpy="0 0 0"/>
+            <geometry>
+                <cylinder length="0.5" radius="0.05"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0.25" rpy="0 0 0"/>
+            <geometry>
+                <cylinder length="0.5" radius="0.05"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="bottom_rotation_joint" type="revolute">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+        <parent link="virtual_link"/>
+        <child link="cylinder_link"/>
+        <limit effort="30" velocity="1.0" lower="-3.14" upper="3.14"/>
+    </joint>
+
+    <link name="sphere_link">
+        <internal>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </internal>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <sphere radius="0.06"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <sphere radius="0.06"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="fixed_joint" type="fixed">
+        <origin xyz="0 0 0.5" rpy="0 0 0"/>
+        <parent link="cylinder_link"/>
+        <child link="sphere_link"/>
+    </joint>
+
+    <link name="cylinder_link2">
+        <internal>
+            <origin xyz="0 0 0.25" rpy="0 0 0"/>
+        </internal>
+        <visual>
+            <origin xyz="0 0 0.25" rpy="0 0 0"/>
+            <geometry>
+                <cylinder length="0.5" radius="0.05"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0.25" rpy="0 0 0"/>
+            <geometry>
+                <cylinder length="0.5" radius="0.05"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="revolute_joint" type="revolute">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <parent link="sphere_link"/>
+        <child link="cylinder_link2"/>
+        <axis xyz="1 0 0"/>
+        <limit effort="30" velocity="1" lower="-3.14" upper="3.14"/>
+    </joint>
+
+</robot>
