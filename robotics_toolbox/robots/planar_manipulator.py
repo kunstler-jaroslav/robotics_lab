@@ -15,11 +15,11 @@ from robotics_toolbox.robots.robot_base import RobotBase
 
 class PlanarManipulator(RobotBase):
     def __init__(
-        self,
-        link_lengths: ArrayLike | None = None,
-        structure: list[str] | str | None = None,
-        base_pose: SE2 | None = None,
-        gripper_length: float = 0.2,
+            self,
+            link_lengths: ArrayLike | None = None,
+            structure: list[str] | str | None = None,
+            base_pose: SE2 | None = None,
+            gripper_length: float = 0.2,
     ) -> None:
         """
         Creates a planar manipulator composed by rotational and prismatic joints.
@@ -133,23 +133,94 @@ class PlanarManipulator(RobotBase):
             ),
         )
 
+    def get_to_flange_transformations(self):
+        """
+        Computes transformation from each joint to the flange
+        """
+        frames = self.fk_all_links()
+        base_flange = self.flange_pose()
+        to_flange = []
+        for frame in frames:
+            to_flange.append(frame.inverse() * base_flange)
+        return to_flange
+
     def jacobian(self) -> np.ndarray:
         """Computes jacobian of the manipulator for the given structure and
         configuration."""
         jac = np.zeros((3, len(self.q)))
-        # todo: HW03 implement jacobian computation
+        angle = np.pi / 2
+        rotation_90 = np.array([[0, -1], [1, 0]])
+        # HW03 implement jacobian computation
+        # by columns
+        # J = N x M  --  N = 3, M = len(self.q))
+        frames = self.fk_all_links()
+        to_flange = self.get_to_flange_transformations()
+        for i in range(len(self.q)):
+            if self.structure[i] == "R":
+                # Tlf = T^(-1) * Tf - transformation from Tl do T flange (Tl - base - Tf) how does tl transfers to tf
+                # n = (90def) * Tlf
+                # jac[0:2, i] = Rw,j * n
+                n = np.dot(rotation_90, to_flange[i].translation)
+                add = np.dot(frames[i].rotation.rot, n)
+                jac[0:2, i] = add
+                jac[2, i] = 1  # 1 for rotation joints
+            if self.structure[i] == "P":
+                #  jac[0:2, i] = Rw,j+1 * a , a = translation axis => a = [1, 0]
+                jac[0:2, i] = np.dot(frames[i+1].rotation.rot, [1, 0])
+                # jac[0:2, i] = np.dot(to_flange[i].rotation.rot, [1, 0])
+                jac[2, i] = 0  # 0 for translation joints
+
         return jac
 
     def jacobian_finite_difference(self, delta=1e-5) -> np.ndarray:
+        """
+        Using finite differentiation compute jacobian from rotation matrix and translation
+        matrix of SE2 transformation, were R = self.flange_pose().rotation.rot
+        and T = self.flange_pose().translation
+        """
+
         jac = np.zeros((3, len(self.q)))
-        # todo: HW03 implement jacobian computation
+
+        # Compute the unperturbed end-effector pose
+        flange_pose = self.flange_pose()
+        original_translation = flange_pose.translation
+        original_rotation = flange_pose.rotation.rot
+        q_backup = self.q.copy()
+
+        x_original = original_translation[0]
+        y_original = original_translation[1]
+        theta_original = np.arctan2(original_rotation[1, 0], original_rotation[0, 0])
+
+        for i in range(len(self.q)):
+            # Perturb the joint angle
+            q_perturbed = self.q.copy()
+            q_perturbed[i] += delta
+            # Set the perturbed joint configuration
+            self.set_configuration(q_perturbed)
+
+            # Compute the perturbed end-effector pose
+            perturbed_flange_pose = self.flange_pose()
+            perturbed_translation = perturbed_flange_pose.translation
+            perturbed_rotation = perturbed_flange_pose.rotation.rot
+
+            x_perturbed = perturbed_translation[0]
+            y_perturbed = perturbed_translation[1]
+            theta_perturbed = np.arctan2(perturbed_rotation[1, 0], perturbed_rotation[0, 0])
+
+            x_data = (x_perturbed - x_original) / delta
+            y_data = (y_perturbed - y_original) / delta
+            theta_data = (theta_perturbed - theta_original) / delta
+
+            jac[:, i] = [x_data, y_data, theta_data]
+            # Restore the original joint configuration
+            self.set_configuration(q_backup)
         return jac
 
     def ik_numerical(
-        self,
-        flange_pose_desired: SE2,
-        max_iterations=1000,
-        acceptable_err=1e-4,
+            self,
+            flange_pose_desired: SE2,
+            max_iterations=1000,
+            acceptable_err=1e-4,
     ) -> bool:
         """Compute IK numerically. Value self.q is used as an initial guess and updated
         to solution of IK. Returns True if converged, False otherwise."""
