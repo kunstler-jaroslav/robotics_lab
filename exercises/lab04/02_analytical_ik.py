@@ -18,20 +18,20 @@ from robotics_toolbox.render.planar_manipulator_renderer import (
 from robotics_toolbox.robots import PlanarManipulator
 from robotics_toolbox.utils import save_fig
 
-robot = PlanarManipulator(
-        link_lengths=np.random.uniform(0.4, 0.8, size=3),
-        base_pose=SE2(
-            translation=np.random.uniform(-0.5, 0.5, size=2),
-            rotation=SO2(np.pi/2),
-        ))
-robot.structure = "RRR"
-
 # robot = PlanarManipulator(
-#     link_lengths=[0.6, 0.4, 0.8],
-#     base_pose=SE2([-0.9, -0.75]),
-#     structure="RRR",
-#     # structure="PRR", # for optional HW
-# )
+#         link_lengths=np.random.uniform(0.4, 0.8, size=3),
+#         base_pose=SE2(
+#             translation=np.random.uniform(-0.5, 0.5, size=2),
+#             rotation=SO2(np.random.uniform(-np.pi, np.pi)),
+#         ))
+# robot.structure = "RRR"
+
+robot = PlanarManipulator(
+    link_lengths=[0.5, 0.5, 0.5],
+    base_pose=SE2([-0.9, -0.75]),
+    structure="RRR",
+    # structure="PRR", # for optional HW
+)
 robot.q = np.random.uniform(-np.pi, np.pi, size=robot.dof)
 render = RendererPlanar(lim_scale=2.0)
 

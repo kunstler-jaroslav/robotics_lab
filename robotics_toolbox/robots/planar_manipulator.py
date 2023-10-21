@@ -273,38 +273,38 @@ class PlanarManipulator(RobotBase):
             "PRR",
         ), "Only RRR or PRR structure is supported"
 
-        # todo: HW04 implement analytical IK for RRR manipulator
-        # todo: HW04 optional implement analytical IK for PRR manipulator
+        #  HW04 implement analytical IK for RRR manipulator
+        #  HW04 optional implement analytical IK for PRR manipulator
         if self.structure == "RRR":
             p_j1 = self.base_pose
             p_j3 = flange_pose_desired.translation - (flange_pose_desired.rotation.rot @ [self.link_lengths[2], 0])
             intersections = circle_circle_intersection(p_j1.translation, float(self.link_lengths[0]), p_j3, float(self.link_lengths[1]))
             print(intersections)
-            points_list = [(p_j1.translation[0], p_j1.translation[1]), (p_j3[0], p_j3[1]),
-                           (flange_pose_desired.translation[0], flange_pose_desired.translation[1]), (intersections[0][0], intersections[0][1]), (intersections[1][0], intersections[1][1])]
-            colors = ['black', 'green', 'red', 'orange', 'orange']
-            labels = ['Base', 'Before flenge', 'target', 'inter', 'inter']
-            self.vis(points_list, labels, colors)
+            # points_list = [(p_j1.translation[0], p_j1.translation[1]), (p_j3[0], p_j3[1]),
+            #                (flange_pose_desired.translation[0], flange_pose_desired.translation[1]), (intersections[0][0], intersections[0][1]), (intersections[1][0], intersections[1][1])]
+            # colors = ['black', 'green', 'red', 'orange', 'orange']
+            # labels = ['Base', 'Before flange', 'target', 'inter', 'inter']
+            # self.vis(points_list, labels, colors)
             print("angle: " + str(self.base_pose.rotation.angle))
             intersection = intersections[0]
             an_1 = math.atan2(intersection[1] - self.base_pose.translation[1],
-                              intersection[0] - self.base_pose.translation[0])
+                              intersection[0] - self.base_pose.translation[0]) - self.base_pose.rotation.angle
             an_1 = (an_1 + np.pi) % (2 * np.pi) - np.pi
-            an_2 = math.atan2(p_j3[1] - intersection[1], p_j3[0] - intersection[0]) - an_1
+            an_2 = math.atan2(p_j3[1] - intersection[1], p_j3[0] - intersection[0]) - an_1 - self.base_pose.rotation.angle
             an_2 = (an_2 + np.pi) % (2 * np.pi) - np.pi
             an_3 = math.atan2(flange_pose_desired.translation[1] - p_j3[1],
-                              flange_pose_desired.translation[0] - p_j3[0]) - an_1 - an_2
+                              flange_pose_desired.translation[0] - p_j3[0]) - an_1 - an_2 - self.base_pose.rotation.angle
             an_3 = (an_3 + np.pi) % (2 * np.pi) - np.pi
 
             print([an_1, an_2, an_3])
 
             intersection = intersections[1]
             an_12 = np.arctan2(intersection[1] - self.base_pose.translation[1],
-                              intersection[0] - self.base_pose.translation[0])
+                              intersection[0] - self.base_pose.translation[0]) - self.base_pose.rotation.angle
             an_12 = (an_12 + np.pi) % (2 * np.pi) - np.pi
-            an_22 = np.arctan2(p_j3[1] - intersection[1], p_j3[0] - intersection[0]) - an_12
+            an_22 = np.arctan2(p_j3[1] - intersection[1], p_j3[0] - intersection[0]) - an_12 - self.base_pose.rotation.angle
             an_22 = (an_22 + np.pi) % (2 * np.pi) - np.pi
-            an_32 = np.arctan2(flange_pose_desired.translation[1] - p_j3[1], flange_pose_desired.translation[0] - p_j3[0]) - an_12 - an_22
+            an_32 = np.arctan2(flange_pose_desired.translation[1] - p_j3[1], flange_pose_desired.translation[0] - p_j3[0]) - an_12 - an_22 - self.base_pose.rotation.angle
             an_32 = (an_32 + np.pi) % (2 * np.pi) - np.pi
             print([an_12, an_22, an_32])
             li = [np.array([an_1, an_2, an_3]), np.array([an_12, an_22, an_32])]
