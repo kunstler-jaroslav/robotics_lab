@@ -5,13 +5,18 @@
 #     Author: Vladimir Petrik <vladimir.petrik@cvut.cz>
 #
 from __future__ import annotations
+
+import math
+import itertools as it
+
 import numpy as np
 from numpy.typing import ArrayLike
 from shapely import MultiPolygon, LineString, MultiLineString
 
 from robotics_toolbox.core import SE2, SE3, SO2
 from robotics_toolbox.robots.robot_base import RobotBase
-
+from robotics_toolbox.utils.geometry_utils import *
+import matplotlib.pyplot as plt
 
 class PlanarManipulator(RobotBase):
     def __init__(
@@ -224,9 +229,41 @@ class PlanarManipulator(RobotBase):
     ) -> bool:
         """Compute IK numerically. Value self.q is used as an initial guess and updated
         to solution of IK. Returns True if converged, False otherwise."""
-        # todo: HW04 implement numerical IK
-
+        # HW04 implement numerical IK
+        for i in range(max_iterations):
+            jac = self.jacobian()
+            jac_inv = np.linalg.pinv(jac)  # Using the pseudoinverse for stability
+            fp = self.flange_pose()
+            error = np.append(flange_pose_desired.translation - fp.translation, flange_pose_desired.rotation.angle-fp.rotation.angle)
+            delta_q = np.dot(jac_inv, error)
+            self.set_configuration(self.q + 1 * delta_q)
+            diff = flange_pose_desired.inverse() * self.flange_pose()
+            if np.abs(diff.translation[0]) <= acceptable_err and np.abs(diff.translation[1]) <= acceptable_err and np.abs(diff.rotation.angle) <= acceptable_err:
+                self.set_configuration(self.q)
+                return True
         return False
+
+    def vis(self, points_list, labels=None, colors=None, figsize=(8, 6)):
+
+        x, y = zip(*points_list)
+        plt.figure(figsize=figsize)
+
+        if colors is None:
+            colors = 'blue'
+        if labels is None:
+            labels = 'List of Points'
+
+        for p1, p2 in it.combinations(points_list, 2):
+            plt.plot([p1[0], p2[0]], [p1[1], p2[1]], linestyle='--', color='gray')
+            dist = math.sqrt((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2)
+            plt.annotate(f'{dist:.2f}', ((p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2), color='red')
+
+        plt.scatter(x, y, color=colors, label=labels)
+        plt.legend()
+        plt.xlabel('X-axis')
+        plt.ylabel('Y-axis')
+        plt.title('Scatter Plot of Points')
+        plt.show()
 
     def ik_analytical(self, flange_pose_desired: SE2) -> list[np.ndarray]:
         """Compute IK analytically, return all solutions for joint limits being
@@ -239,8 +276,42 @@ class PlanarManipulator(RobotBase):
         # todo: HW04 implement analytical IK for RRR manipulator
         # todo: HW04 optional implement analytical IK for PRR manipulator
         if self.structure == "RRR":
-            pass
-        return []
+            p_j1 = self.base_pose
+            p_j3 = flange_pose_desired.translation - (flange_pose_desired.rotation.rot @ [self.link_lengths[2], 0])
+            intersections = circle_circle_intersection(p_j1.translation, float(self.link_lengths[0]), p_j3, float(self.link_lengths[1]))
+            print(intersections)
+            points_list = [(p_j1.translation[0], p_j1.translation[1]), (p_j3[0], p_j3[1]),
+                           (flange_pose_desired.translation[0], flange_pose_desired.translation[1]), (intersections[0][0], intersections[0][1]), (intersections[1][0], intersections[1][1])]
+            colors = ['black', 'green', 'red', 'orange', 'orange']
+            labels = ['Base', 'Before flenge', 'target', 'inter', 'inter']
+            self.vis(points_list, labels, colors)
+            print("angle: " + str(self.base_pose.rotation.angle))
+            intersection = intersections[0]
+            an_1 = math.atan2(intersection[1] - self.base_pose.translation[1],
+                              intersection[0] - self.base_pose.translation[0])
+            an_1 = (an_1 + np.pi) % (2 * np.pi) - np.pi
+            an_2 = math.atan2(p_j3[1] - intersection[1], p_j3[0] - intersection[0]) - an_1
+            an_2 = (an_2 + np.pi) % (2 * np.pi) - np.pi
+            an_3 = math.atan2(flange_pose_desired.translation[1] - p_j3[1],
+                              flange_pose_desired.translation[0] - p_j3[0]) - an_1 - an_2
+            an_3 = (an_3 + np.pi) % (2 * np.pi) - np.pi
+
+            print([an_1, an_2, an_3])
+
+            intersection = intersections[1]
+            an_12 = np.arctan2(intersection[1] - self.base_pose.translation[1],
+                              intersection[0] - self.base_pose.translation[0])
+            an_12 = (an_12 + np.pi) % (2 * np.pi) - np.pi
+            an_22 = np.arctan2(p_j3[1] - intersection[1], p_j3[0] - intersection[0]) - an_12
+            an_22 = (an_22 + np.pi) % (2 * np.pi) - np.pi
+            an_32 = np.arctan2(flange_pose_desired.translation[1] - p_j3[1], flange_pose_desired.translation[0] - p_j3[0]) - an_12 - an_22
+            an_32 = (an_32 + np.pi) % (2 * np.pi) - np.pi
+            print([an_12, an_22, an_32])
+            li = [np.array([an_1, an_2, an_3]), np.array([an_12, an_22, an_32])]
+
+            return li
+        else:
+            return []
 
     def in_collision(self) -> bool:
         """Check if robot in its current pose is in collision."""
