@@ -18,6 +18,7 @@ from robotics_toolbox.robots.robot_base import RobotBase
 from robotics_toolbox.utils.geometry_utils import *
 import matplotlib.pyplot as plt
 
+
 class PlanarManipulator(RobotBase):
     def __init__(
             self,
@@ -171,7 +172,7 @@ class PlanarManipulator(RobotBase):
                 jac[2, i] = 1  # 1 for rotation joints
             if self.structure[i] == "P":
                 #  jac[0:2, i] = Rw,j+1 * a , a = translation axis => a = [1, 0]
-                jac[0:2, i] = np.dot(frames[i+1].rotation.rot, [1, 0])
+                jac[0:2, i] = np.dot(frames[i + 1].rotation.rot, [1, 0])
                 # jac[0:2, i] = np.dot(to_flange[i].rotation.rot, [1, 0])
                 jac[2, i] = 0  # 0 for translation joints
 
@@ -234,11 +235,13 @@ class PlanarManipulator(RobotBase):
             jac = self.jacobian()
             jac_inv = np.linalg.pinv(jac)  # Using the pseudoinverse for stability
             fp = self.flange_pose()
-            error = np.append(flange_pose_desired.translation - fp.translation, flange_pose_desired.rotation.angle-fp.rotation.angle)
+            error = np.append(flange_pose_desired.translation - fp.translation,
+                              flange_pose_desired.rotation.angle - fp.rotation.angle)
             delta_q = np.dot(jac_inv, error)
             self.set_configuration(self.q + 1 * delta_q)
             diff = flange_pose_desired.inverse() * self.flange_pose()
-            if np.abs(diff.translation[0]) <= acceptable_err and np.abs(diff.translation[1]) <= acceptable_err and np.abs(diff.rotation.angle) <= acceptable_err:
+            if np.abs(diff.translation[0]) <= acceptable_err and np.abs(
+                    diff.translation[1]) <= acceptable_err and np.abs(diff.rotation.angle) <= acceptable_err:
                 self.set_configuration(self.q)
                 return True
         return False
@@ -255,7 +258,7 @@ class PlanarManipulator(RobotBase):
 
         for p1, p2 in it.combinations(points_list, 2):
             plt.plot([p1[0], p2[0]], [p1[1], p2[1]], linestyle='--', color='gray')
-            dist = math.sqrt((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2)
+            dist = math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
             plt.annotate(f'{dist:.2f}', ((p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2), color='red')
 
         plt.scatter(x, y, color=colors, label=labels)
@@ -276,55 +279,106 @@ class PlanarManipulator(RobotBase):
         #  HW04 implement analytical IK for RRR manipulator
         #  HW04 optional implement analytical IK for PRR manipulator
         if self.structure == "RRR":
+            ret = []
             p_j1 = self.base_pose
             p_j3 = flange_pose_desired.translation - (flange_pose_desired.rotation.rot @ [self.link_lengths[2], 0])
-            intersections = circle_circle_intersection(p_j1.translation, float(self.link_lengths[0]), p_j3, float(self.link_lengths[1]))
-            print(intersections)
+            intersections = circle_circle_intersection(p_j1.translation, float(self.link_lengths[0]), p_j3,
+                                                       float(self.link_lengths[1]))
             # points_list = [(p_j1.translation[0], p_j1.translation[1]), (p_j3[0], p_j3[1]),
             #                (flange_pose_desired.translation[0], flange_pose_desired.translation[1]), (intersections[0][0], intersections[0][1]), (intersections[1][0], intersections[1][1])]
             # colors = ['black', 'green', 'red', 'orange', 'orange']
             # labels = ['Base', 'Before flange', 'target', 'inter', 'inter']
             # self.vis(points_list, labels, colors)
-            print("angle: " + str(self.base_pose.rotation.angle))
+            # print("angle: " + str(self.base_pose.rotation.angle))
+
+            # solution 1
             intersection = intersections[0]
-            an_1 = math.atan2(intersection[1] - self.base_pose.translation[1],
-                              intersection[0] - self.base_pose.translation[0]) - self.base_pose.rotation.angle
-            an_1 = (an_1 + np.pi) % (2 * np.pi) - np.pi
-            an_2 = math.atan2(p_j3[1] - intersection[1], p_j3[0] - intersection[0]) - an_1 - self.base_pose.rotation.angle
-            an_2 = (an_2 + np.pi) % (2 * np.pi) - np.pi
-            an_3 = math.atan2(flange_pose_desired.translation[1] - p_j3[1],
-                              flange_pose_desired.translation[0] - p_j3[0]) - an_1 - an_2 - self.base_pose.rotation.angle
-            an_3 = (an_3 + np.pi) % (2 * np.pi) - np.pi
+            theta1 = math.atan2(intersection[1] - self.base_pose.translation[1],
+                                intersection[0] - self.base_pose.translation[0]) - self.base_pose.rotation.angle
+            theta1 = (theta1 + np.pi) % (2 * np.pi) - np.pi
+            theta2 = math.atan2(p_j3[1] - intersection[1],
+                                p_j3[0] - intersection[0]) - theta1 - self.base_pose.rotation.angle
+            theta2 = (theta2 + np.pi) % (2 * np.pi) - np.pi
+            theta3 = math.atan2(flange_pose_desired.translation[1] - p_j3[1],
+                                flange_pose_desired.translation[0] - p_j3[
+                                    0]) - theta1 - theta2 - self.base_pose.rotation.angle
+            theta3 = (theta3 + np.pi) % (2 * np.pi) - np.pi
+            config1 = np.array([theta1, theta2, theta3])
 
-            print([an_1, an_2, an_3])
-
+            # solution 2
             intersection = intersections[1]
-            an_12 = np.arctan2(intersection[1] - self.base_pose.translation[1],
-                              intersection[0] - self.base_pose.translation[0]) - self.base_pose.rotation.angle
-            an_12 = (an_12 + np.pi) % (2 * np.pi) - np.pi
-            an_22 = np.arctan2(p_j3[1] - intersection[1], p_j3[0] - intersection[0]) - an_12 - self.base_pose.rotation.angle
-            an_22 = (an_22 + np.pi) % (2 * np.pi) - np.pi
-            an_32 = np.arctan2(flange_pose_desired.translation[1] - p_j3[1], flange_pose_desired.translation[0] - p_j3[0]) - an_12 - an_22 - self.base_pose.rotation.angle
-            an_32 = (an_32 + np.pi) % (2 * np.pi) - np.pi
-            print([an_12, an_22, an_32])
-            li = [np.array([an_1, an_2, an_3]), np.array([an_12, an_22, an_32])]
+            theta1 = np.arctan2(intersection[1] - self.base_pose.translation[1],
+                                intersection[0] - self.base_pose.translation[0]) - self.base_pose.rotation.angle
+            theta1 = (theta1 + np.pi) % (2 * np.pi) - np.pi
+            theta2 = np.arctan2(p_j3[1] - intersection[1],
+                                p_j3[0] - intersection[0]) - theta1 - self.base_pose.rotation.angle
+            theta2 = (theta2 + np.pi) % (2 * np.pi) - np.pi
+            theta3 = np.arctan2(flange_pose_desired.translation[1] - p_j3[1], flange_pose_desired.translation[0] - p_j3[
+                0]) - theta1 - theta2 - self.base_pose.rotation.angle
+            theta3 = (theta3 + np.pi) % (2 * np.pi) - np.pi
 
-            return li
+            return [config1, np.array([theta1, theta2, theta3])]
+
+        elif self.structure == "PRR":
+            ret = []
+            # circle 1
+            center_c1 = flange_pose_desired.translation - flange_pose_desired.rotation.act([self.link_lengths[-1], 0])
+            radius_c1 = float(self.link_lengths[-2])
+            # how far can I get
+            maximal_length = np.linalg.norm(flange_pose_desired.translation - self.base_pose.translation) + \
+                             self.link_lengths[1] + self.link_lengths[2]
+            # circle 2
+            center_c2 = self.base_pose.translation - (SO2(float(self.link_lengths[0])) * self.base_pose.rotation).act(
+                [maximal_length, 0])
+            radius_c2 = self.base_pose.translation + (SO2(float(self.link_lengths[0])) * self.base_pose.rotation).act(
+                [maximal_length, 0])
+            # get intersections
+            intersections = circle_line_intersection(center_c1, radius_c1, center_c2, radius_c2)
+
+            # solution 1
+            intersection = intersections[0]
+            trans = np.linalg.norm(self.base_pose.translation - intersection)
+            if np.linalg.norm(center_c2 - intersection) < np.linalg.norm(radius_c2 - intersection):
+                trans = -trans
+            theta2 = np.arctan2(center_c1[1] - intersection[1], center_c1[0] - intersection[0]) - self.link_lengths[
+                0] - self.base_pose.rotation.angle
+            theta2 = (theta2 + np.pi) % (2 * np.pi) - np.pi
+            theta3 = np.arctan2(flange_pose_desired.translation[1] - center_c1[1],
+                                flange_pose_desired.translation[0] - center_c1[0]) - \
+                     self.link_lengths[0] - theta2 - self.base_pose.rotation.angle
+            theta3 = (theta3 + np.pi) % (2 * np.pi) - np.pi
+            config1 = np.array([trans, theta2, theta3])
+
+            # solution 2
+            intersection = intersections[1]
+            trans = np.linalg.norm(self.base_pose.translation - intersection)
+            if np.linalg.norm(center_c2 - intersection) < np.linalg.norm(radius_c2 - intersection):
+                trans = -trans
+            theta2 = np.arctan2(center_c1[1] - intersection[1], center_c1[0] - intersection[0]) - self.link_lengths[
+                0] - self.base_pose.rotation.angle
+            theta2 = (theta2 + np.pi) % (2 * np.pi) - np.pi
+            theta3 = np.arctan2(flange_pose_desired.translation[1] - center_c1[1],
+                                flange_pose_desired.translation[0] - center_c1[0]) - \
+                     self.link_lengths[0] - theta2 - self.base_pose.rotation.angle
+            theta3 = (theta3 + np.pi) % (2 * np.pi) - np.pi
+
+            return [config1, np.array([trans, theta2, theta3])]
         else:
             return []
 
-    def in_collision(self) -> bool:
-        """Check if robot in its current pose is in collision."""
-        frames = self.fk_all_links()
-        points = [f.translation for f in frames]
-        gripper_lines = self._gripper_lines(frames[-1])
 
-        links = [LineString([a, b]) for a, b in zip(points[:-2], points[1:-1])]
-        links += [MultiLineString((*gripper_lines, (points[-2], points[-1])))]
-        for i in range(len(links)):
-            for j in range(i + 2, len(links)):
-                if links[i].intersects(links[j]):
-                    return True
-        return MultiLineString(
-            (*gripper_lines, *zip(points[:-1], points[1:]))
-        ).intersects(self.obstacles)
+def in_collision(self) -> bool:
+    """Check if robot in its current pose is in collision."""
+    frames = self.fk_all_links()
+    points = [f.translation for f in frames]
+    gripper_lines = self._gripper_lines(frames[-1])
+
+    links = [LineString([a, b]) for a, b in zip(points[:-2], points[1:-1])]
+    links += [MultiLineString((*gripper_lines, (points[-2], points[-1])))]
+    for i in range(len(links)):
+        for j in range(i + 2, len(links)):
+            if links[i].intersects(links[j]):
+                return True
+    return MultiLineString(
+        (*gripper_lines, *zip(points[:-1], points[1:]))
+    ).intersects(self.obstacles)
