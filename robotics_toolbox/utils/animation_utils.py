@@ -43,9 +43,9 @@ def save_fig(output_folder: Path | str = "/tmp/animation", renderer=None):
 
 
 def create_mp4_from_folder(
-    folder: Path | str = "/tmp/animation",
-    output: Path | str | None = None,
-    fps: int = 10,
+        folder: Path | str = "/tmp/animation",
+        output: Path | str | None = None,
+        fps: int = 10,
 ):
     """From the folder that contains images names img_X.png, create mp4 animation."""
     folder = Path(folder)

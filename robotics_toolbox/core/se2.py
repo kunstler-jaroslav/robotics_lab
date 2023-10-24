@@ -16,7 +16,7 @@ class SE2:
     """Transformation in 2D that is composed of rotation and translation."""
 
     def __init__(
-        self, translation: ArrayLike | None = None, rotation: SO2 | float | None = None
+            self, translation: ArrayLike | None = None, rotation: SO2 | float | None = None
     ) -> None:
         """Crete an SE2 transformation. Identity is the default."""
         super().__init__()
@@ -92,8 +92,8 @@ class SE2:
     def __eq__(self, other: SE2) -> bool:
         """Returns true if two transformations are almost equal."""
         return (
-            np.allclose(self.translation, other.translation)
-            and self.rotation == other.rotation
+                np.allclose(self.translation, other.translation)
+                and self.rotation == other.rotation
         )
 
     def __hash__(self):

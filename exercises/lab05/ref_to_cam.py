@@ -10,7 +10,6 @@ xyz_r[:, 2] = 0
 T_RC = SE3(translation=[0.1, 0, 1.]) * SE3(rotation=(SO3.rx(np.pi)))
 T_CR = T_RC.inverse()
 
-
 # valid only this time, may not work generally
 # T_RC = SE3(translation=[0.1, 0, 1.], rotation=SO3.rx(np.pi))
 
@@ -50,9 +49,7 @@ for i in range(n):
     uv[i, 0] = u_h[0] / u_h[-1]  # division by las, as it is not homogenous
     uv[i, 1] = u_h[1] / u_h[-1]
 
-
 ax_image.plot(*uv.T, 'o', ms=10, color='tab:blue')
-
 
 H, _ = cv2.findHomography(uv[:, :2], xyz_r[:, :2])
 

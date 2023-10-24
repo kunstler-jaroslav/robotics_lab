@@ -45,5 +45,4 @@ for i in range(robot.dof):
         save_fig('/tmp/animation')
 create_gif_from_mp4(create_mp4_from_folder('/tmp/animation'))
 
-
 renderer.wait_for_close()

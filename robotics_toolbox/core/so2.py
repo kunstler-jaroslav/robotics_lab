@@ -57,4 +57,3 @@ class SO2:
 
     def __hash__(self):
         return id(self)
-

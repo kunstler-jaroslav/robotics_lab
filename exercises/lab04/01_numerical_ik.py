@@ -25,7 +25,6 @@ render.plot_manipulator(robot)
 desired_pose = SE2(translation=[-1.5, 1.0], rotation=SO2(angle=np.deg2rad(45 + 90)))
 render.plot_se2(desired_pose)
 
-
 for _ in range(50):
     save_fig()
     converged = robot.ik_numerical(flange_pose_desired=desired_pose, max_iterations=1)

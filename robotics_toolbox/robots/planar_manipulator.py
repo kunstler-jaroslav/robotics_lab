@@ -339,7 +339,7 @@ class PlanarManipulator(RobotBase):
             theta2 = (theta2 + np.pi) % (2 * np.pi) - np.pi
             theta3 = np.arctan2(flange_pose_desired.translation[1] - center_c1[1],
                                 flange_pose_desired.translation[0] - center_c1[0]) - \
-                    self.link_lengths[0] - theta2 - self.base_pose.rotation.angle
+                     self.link_lengths[0] - theta2 - self.base_pose.rotation.angle
             theta3 = (theta3 + np.pi) % (2 * np.pi) - np.pi
             config1 = np.array([trans, theta2, theta3])
 

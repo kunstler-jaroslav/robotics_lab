@@ -26,10 +26,10 @@ class RRT:
         self.delta_q = delta_q
 
     def plan(
-        self,
-        q_start: ArrayLike | SE2 | SE3,
-        q_goal: ArrayLike | SE2 | SE3,
-        max_iterations: int = 10000,
+            self,
+            q_start: ArrayLike | SE2 | SE3,
+            q_goal: ArrayLike | SE2 | SE3,
+            max_iterations: int = 10000,
     ) -> list[ArrayLike | SE2 | SE3]:
         """RRT algorithm for motion planning."""
         assert not self.robot.set_configuration(q_start).in_collision()
@@ -38,7 +38,7 @@ class RRT:
         return []
 
     def random_shortcut(
-        self, path: list[np.ndarray | SE2 | SE3], max_iterations=100
+            self, path: list[np.ndarray | SE2 | SE3], max_iterations=100
     ) -> list[np.ndarray | SE2 | SE3]:
         """Random shortcut algorithm that pick two points on the path randomly and tries
         to interpolate between them. If collision free interpolation exists,

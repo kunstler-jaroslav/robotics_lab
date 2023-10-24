@@ -16,13 +16,13 @@ from robotics_toolbox.robots.robot_base import RobotBase
 
 class SpatialManipulator(RobotBase):
     def __init__(
-        self,
-        robot_name: str | None = None,
-        urdf_path: str | Path | None = None,
-        mesh_folder_path: Path | str | list[Path] | list[str] | None = None,
-        srdf_path: Path | str | None = None,
-        base_pose: SE3 | None = None,
-        **kwargs,
+            self,
+            robot_name: str | None = None,
+            urdf_path: str | Path | None = None,
+            mesh_folder_path: Path | str | list[Path] | list[str] | None = None,
+            srdf_path: Path | str | None = None,
+            base_pose: SE3 | None = None,
+            **kwargs,
     ) -> None:
         """
         base_pose: where is the robot base placed

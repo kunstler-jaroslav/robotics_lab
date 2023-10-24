@@ -42,9 +42,6 @@ render.plot_se2(desired_pose)
 
 solutions = robot.ik_analytical(desired_pose)
 
-
-
-
 # # todo
 # render = RendererPlanar(lim_scale=2.0)
 # robot = sample_planar_manipulator(3)

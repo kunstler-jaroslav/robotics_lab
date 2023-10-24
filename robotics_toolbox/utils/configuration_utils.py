@@ -12,7 +12,7 @@ from robotics_toolbox.core import SE2, SE3, SO3
 
 
 def distance_between_configurations(
-    a: ArrayLike | SE2 | SE3, b: ArrayLike | SE2 | SE3
+        a: ArrayLike | SE2 | SE3, b: ArrayLike | SE2 | SE3
 ) -> float:
     """Compute distance between two configurations, expressed either in task-space
     SE2/SE3 or joint space np.ndarray"""
@@ -28,7 +28,7 @@ def distance_between_configurations(
 
 
 def interpolate(
-    a: ArrayLike | SE2 | SE3, b: ArrayLike | SE2 | SE3, d: float
+        a: ArrayLike | SE2 | SE3, b: ArrayLike | SE2 | SE3, d: float
 ) -> np.ndarray | SE2 | SE3:
     """Interpolate between two configurations, s.t. dist(a,b) = d"""
     assert type(a) == type(b)

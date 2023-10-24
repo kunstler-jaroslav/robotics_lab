@@ -23,7 +23,7 @@ def nullspace(A, atol=1e-13, rtol=0.0):
 
 
 def circle_circle_intersection(
-    c0: ArrayLike, r0: float, c1: ArrayLike, r1: float
+        c0: ArrayLike, r0: float, c1: ArrayLike, r1: float
 ) -> list[np.ndarray]:
     """Computes intersection of the circles defined by center c_i and radius r_i.
     Returns empty array if there is no solution, two solutions otherwise. If there
