@@ -57,7 +57,8 @@ class SE2:
         # HW1 implement inverse
         # Calculate the inverse translation by applying the inverse rotation
         # 1. Invert the rotation matrix
-        inverse_rotation = np.transpose(self.rotation.rot)  # In 2D, the inverse of a rotation matrix is its transpose
+        # In 2D, the inverse of a rotation matrix is its transpose
+        inverse_rotation = np.transpose(self.rotation.rot)
 
         # 2. Compute the inverse translation and reshape it to be a column vector
         inverse_translation = -np.dot(inverse_rotation, self.translation).reshape((2, 1))
@@ -102,7 +103,3 @@ class SE2:
         return (
             f"SE2(translation={self.translation}, rotation=SO2({self.rotation.angle}))"
         )
-
-
-if __name__ == "__main__":
-    pass

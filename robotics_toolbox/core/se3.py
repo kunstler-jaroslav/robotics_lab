@@ -51,7 +51,8 @@ class SE3:
         """Compute inverse of the transformation"""
         # HW1 implement inverse
         # Compute the inverse of the rotation matrix (transpose)
-        inverse_rotation = np.transpose(self.rotation.rot)  # In 2D, the inverse of a rotation matrix is its transpose
+        # In 2D, the inverse of a rotation matrix is its transpose
+        inverse_rotation = np.transpose(self.rotation.rot)
 
         # 2. Compute the inverse translation and reshape it to be a column vector
         inverse_translation = -np.dot(inverse_rotation, self.translation).reshape((3, 1))

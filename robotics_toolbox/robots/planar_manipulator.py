@@ -19,6 +19,28 @@ from robotics_toolbox.utils.geometry_utils import *
 import matplotlib.pyplot as plt
 
 
+def vis(points_list, labels=None, colors=None, figsize=(8, 6)):
+    x, y = zip(*points_list)
+    plt.figure(figsize=figsize)
+
+    if colors is None:
+        colors = 'blue'
+    if labels is None:
+        labels = 'List of Points'
+
+    for p1, p2 in it.combinations(points_list, 2):
+        plt.plot([p1[0], p2[0]], [p1[1], p2[1]], linestyle='--', color='gray')
+        dist = math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
+        plt.annotate(f'{dist:.2f}', ((p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2), color='red')
+
+    plt.scatter(x, y, color=colors, label=labels)
+    plt.legend()
+    plt.xlabel('X-axis')
+    plt.ylabel('Y-axis')
+    plt.title('Scatter Plot of Points')
+    plt.show()
+
+
 class PlanarManipulator(RobotBase):
     def __init__(
             self,
@@ -246,28 +268,6 @@ class PlanarManipulator(RobotBase):
                 return True
         return False
 
-    def vis(self, points_list, labels=None, colors=None, figsize=(8, 6)):
-
-        x, y = zip(*points_list)
-        plt.figure(figsize=figsize)
-
-        if colors is None:
-            colors = 'blue'
-        if labels is None:
-            labels = 'List of Points'
-
-        for p1, p2 in it.combinations(points_list, 2):
-            plt.plot([p1[0], p2[0]], [p1[1], p2[1]], linestyle='--', color='gray')
-            dist = math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
-            plt.annotate(f'{dist:.2f}', ((p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2), color='red')
-
-        plt.scatter(x, y, color=colors, label=labels)
-        plt.legend()
-        plt.xlabel('X-axis')
-        plt.ylabel('Y-axis')
-        plt.title('Scatter Plot of Points')
-        plt.show()
-
     def ik_analytical(self, flange_pose_desired: SE2) -> list[np.ndarray]:
         """Compute IK analytically, return all solutions for joint limits being
         from -pi to pi for revolute joints -inf to inf for prismatic joints."""
@@ -284,12 +284,6 @@ class PlanarManipulator(RobotBase):
             p_j3 = flange_pose_desired.translation - (flange_pose_desired.rotation.rot @ [self.link_lengths[2], 0])
             intersections = circle_circle_intersection(p_j1.translation, float(self.link_lengths[0]), p_j3,
                                                        float(self.link_lengths[1]))
-            # points_list = [(p_j1.translation[0], p_j1.translation[1]), (p_j3[0], p_j3[1]),
-            #                (flange_pose_desired.translation[0], flange_pose_desired.translation[1]), (intersections[0][0], intersections[0][1]), (intersections[1][0], intersections[1][1])]
-            # colors = ['black', 'green', 'red', 'orange', 'orange']
-            # labels = ['Base', 'Before flange', 'target', 'inter', 'inter']
-            # self.vis(points_list, labels, colors)
-            # print("angle: " + str(self.base_pose.rotation.angle))
 
             # solution 1
             intersection = intersections[0]
@@ -328,31 +322,31 @@ class PlanarManipulator(RobotBase):
             maximal_length = np.linalg.norm(flange_pose_desired.translation - self.base_pose.translation) + \
                              self.link_lengths[1] + self.link_lengths[2]
             # circle 2
-            center_c2 = self.base_pose.translation - (SO2(float(self.link_lengths[0])) * self.base_pose.rotation).act(
+            point_a = self.base_pose.translation - (SO2(float(self.link_lengths[0])) * self.base_pose.rotation).act(
                 [maximal_length, 0])
-            radius_c2 = self.base_pose.translation + (SO2(float(self.link_lengths[0])) * self.base_pose.rotation).act(
+            point_b = self.base_pose.translation + (SO2(float(self.link_lengths[0])) * self.base_pose.rotation).act(
                 [maximal_length, 0])
             # get intersections
-            intersections = circle_line_intersection(center_c1, radius_c1, center_c2, radius_c2)
+            intersections = circle_line_intersection(center_c1, radius_c1, point_a, point_b)
 
             # solution 1
             intersection = intersections[0]
             trans = np.linalg.norm(self.base_pose.translation - intersection)
-            if np.linalg.norm(center_c2 - intersection) < np.linalg.norm(radius_c2 - intersection):
+            if np.linalg.norm(point_a - intersection) < np.linalg.norm(point_b - intersection):
                 trans = -trans
             theta2 = np.arctan2(center_c1[1] - intersection[1], center_c1[0] - intersection[0]) - self.link_lengths[
                 0] - self.base_pose.rotation.angle
             theta2 = (theta2 + np.pi) % (2 * np.pi) - np.pi
             theta3 = np.arctan2(flange_pose_desired.translation[1] - center_c1[1],
                                 flange_pose_desired.translation[0] - center_c1[0]) - \
-                     self.link_lengths[0] - theta2 - self.base_pose.rotation.angle
+                    self.link_lengths[0] - theta2 - self.base_pose.rotation.angle
             theta3 = (theta3 + np.pi) % (2 * np.pi) - np.pi
             config1 = np.array([trans, theta2, theta3])
 
             # solution 2
             intersection = intersections[1]
             trans = np.linalg.norm(self.base_pose.translation - intersection)
-            if np.linalg.norm(center_c2 - intersection) < np.linalg.norm(radius_c2 - intersection):
+            if np.linalg.norm(point_a - intersection) < np.linalg.norm(point_b - intersection):
                 trans = -trans
             theta2 = np.arctan2(center_c1[1] - intersection[1], center_c1[0] - intersection[0]) - self.link_lengths[
                 0] - self.base_pose.rotation.angle
