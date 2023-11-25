@@ -185,7 +185,8 @@ class PlanarManipulator(RobotBase):
         to_flange = self.get_to_flange_transformations()
         for i in range(len(self.q)):
             if self.structure[i] == "R":
-                # Tlf = T^(-1) * Tf - transformation from Tl do T flange (Tl - base - Tf) how does tl transfers to tf
+                # Tlf = T^(-1) * Tf - transformation from Tl do T flange
+                # (Tl - base - Tf) how does tl transfers to tf
                 # n = (90def) * Tlf
                 # jac[0:2, i] = Rw,j * n
                 n = np.dot(rotation_90, to_flange[i].translation)
