@@ -33,7 +33,7 @@ class TestFKPlanar(unittest.TestCase):
             self.assertEqual(frames[0], robot.base_pose)
 
             for fref, f, qi, jt, li in zip(
-                    data.oMi[1:], frames[1:], robot.q, robot.structure, robot.link_lengths
+                data.oMi[1:], frames[1:], robot.q, robot.structure, robot.link_lengths
             ):
                 d = SE2([-li, 0]) if jt == "R" else SE2()
                 assert_se2_equals_pin_se3(self, f * d, fref)
